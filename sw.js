@@ -1,5 +1,5 @@
-const CACHE = 'mofu-work-v3';
-const ASSETS = ['./', './index.html', './manifest.json', './icon-192.svg', './dog-illust.png', './paw-mark.png'];
+const CACHE = 'mofu-work-v5';
+const ASSETS = ['./index.html'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -15,6 +15,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request).catch(() => caches.match(e.request))
   );
 });

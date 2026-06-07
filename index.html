@@ -187,6 +187,7 @@ body::before{
   aspect-ratio:1;display:flex;align-items:center;justify-content:center;
   position:relative;cursor:pointer;border-radius:50%;
   font-size:13px;font-weight:600;color:var(--ink-soft);
+  border:none;background:transparent;font-family:inherit;padding:0;
 }
 .cal-day.empty{cursor:default}
 .cal-day.today{font-weight:800;color:var(--ink)}
@@ -411,7 +412,7 @@ body::before{
           <img class="dog-illust" src="dog-illust.png" alt="パソコンでお仕事するわんちゃん" width="440" height="440">
         </div>
       </div>
-      <button class="btn-main btn-start" id="btnStart" onclick="toggleTimer()">
+      <button type="button" class="btn-main btn-start" id="btnStart" onclick="toggleTimer()">
         <span class="btn-play-icon"></span>はじめる
       </button>
     </div>
@@ -431,13 +432,13 @@ body::before{
   <div class="rec-header">
     <div class="rec-title">記録</div>
     <div class="view-tabs">
-      <button class="view-tab active" data-view="calendar" onclick="setRecordView('calendar')">
+      <button type="button" class="view-tab active" data-view="calendar" onclick="setRecordView('calendar')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M3 10h18M8 2v4M16 2v4"/><path d="M9 15l2 2 4-4" stroke-linecap="round"/></svg>
       </button>
-      <button class="view-tab" data-view="week" onclick="setRecordView('week')">
+      <button type="button" class="view-tab" data-view="week" onclick="setRecordView('week')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
       </button>
-      <button class="view-tab" data-view="chart" onclick="setRecordView('chart')">
+      <button type="button" class="view-tab" data-view="chart" onclick="setRecordView('chart')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="12" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg>
       </button>
     </div>
@@ -500,15 +501,15 @@ body::before{
 
 <!-- NAV -->
 <nav class="bottom-nav">
-  <button class="nav-btn active" data-screen="timer" onclick="switchScreen('timer')">
+  <button type="button" class="nav-btn active" data-screen="timer" onclick="switchScreen('timer')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M12 5V3M16 3h-2"/></svg>
     <span>タイマー</span>
   </button>
-  <button class="nav-btn" data-screen="records" onclick="switchScreen('records')">
+  <button type="button" class="nav-btn" data-screen="records" onclick="switchScreen('records')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M3 10h18M9 15l2 2 4-4" stroke-linecap="round"/></svg>
     <span>記録</span>
   </button>
-  <button class="nav-btn" data-screen="profile" onclick="switchScreen('profile')">
+  <button type="button" class="nav-btn" data-screen="profile" onclick="switchScreen('profile')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
     <span>わたし</span>
   </button>
@@ -517,10 +518,97 @@ body::before{
 <div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEY = 'mofu-work-sessions';
-const ACTIVE_KEY = 'mofu-work-active';
-
+const STORAGE_KEY = 'mofu_work';
+const OLD_SESSIONS_KEY = 'mofu-work-sessions';
+const OLD_ACTIVE_KEY = 'mofu-work-active';
 const PAW_SRC = 'paw-mark.png';
+
+let timerInterval = null;
+
+const state = {
+  sessions: [],
+  activeStart: null,
+  recordView: 'calendar',
+  selectedDate: '',
+  calYear: 0,
+  calMonth: 0,
+  weekStart: null
+};
+
+function load() {
+  try {
+    const d = localStorage.getItem(STORAGE_KEY);
+    if (d) {
+      const data = JSON.parse(d);
+      if (Array.isArray(data.sessions)) state.sessions = data.sessions;
+      if (data.activeStart) state.activeStart = data.activeStart;
+    }
+  } catch (e) {}
+  migrate();
+  const now = new Date();
+  state.calYear = now.getFullYear();
+  state.calMonth = now.getMonth();
+  state.selectedDate = todayStr();
+  state.weekStart = getWeekStart(now);
+  if (state.activeStart) {
+    startTimerLoop();
+    renderTimer();
+  }
+}
+
+function migrate() {
+  let changed = false;
+  if (!state.sessions.length) {
+    try {
+      const old = localStorage.getItem(OLD_SESSIONS_KEY);
+      if (old) {
+        const arr = JSON.parse(old);
+        if (Array.isArray(arr)) {
+          state.sessions = arr;
+          changed = true;
+        }
+      }
+    } catch (e) {}
+  }
+  if (!state.activeStart) {
+    try {
+      const oldActive = localStorage.getItem(OLD_ACTIVE_KEY);
+      if (oldActive) {
+        state.activeStart = oldActive;
+        changed = true;
+      }
+    } catch (e) {}
+  }
+  state.sessions.forEach(s => {
+    if (!s.id) { s.id = uid(); changed = true; }
+    if (s.durationMs == null && s.start && s.end) {
+      s.durationMs = new Date(s.end) - new Date(s.start);
+      changed = true;
+    }
+  });
+  if (changed) {
+    save();
+    try {
+      localStorage.removeItem(OLD_SESSIONS_KEY);
+      localStorage.removeItem(OLD_ACTIVE_KEY);
+    } catch (e) {}
+  }
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      sessions: state.sessions,
+      activeStart: state.activeStart
+    }));
+  } catch (e) {}
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function dateStr(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function todayStr() { return dateStr(new Date()); }
+function parseDate(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 function pawImg(size, extraClass = '', extraStyle = '') {
   const cls = `paw-img${extraClass ? ' ' + extraClass : ''}`;
@@ -550,44 +638,6 @@ function injectPawIcons() {
   document.getElementById('statPawIcon').innerHTML = pawImg(28);
 }
 
-let sessions = [];
-let activeStart = null;
-let timerInterval = null;
-let recordView = 'calendar';
-let calYear, calMonth, selectedDate;
-let weekStart;
-
-function loadData() {
-  try { sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { sessions = []; }
-  const active = localStorage.getItem(ACTIVE_KEY);
-  if (active) {
-    activeStart = new Date(active);
-    startTimerLoop();
-    updateTimerUI(true);
-  }
-  const now = new Date();
-  calYear = now.getFullYear();
-  calMonth = now.getMonth();
-  selectedDate = dateKey(now);
-  weekStart = getWeekStart(now);
-}
-
-function saveSessions() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-}
-
-function dateKey(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function parseDate(key) {
-  const [y, m, d] = key.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-
 function formatDuration(ms) {
   const totalMin = Math.floor(ms / 60000);
   const h = Math.floor(totalMin / 60);
@@ -605,15 +655,15 @@ function formatTimer(ms) {
 }
 
 function formatTime(d) {
-  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 function getSessionsForDate(key) {
-  return sessions.filter(s => dateKey(new Date(s.start)) === key);
+  return state.sessions.filter(s => dateStr(new Date(s.start)) === key);
 }
 
 function getTotalMs(arr) {
-  return arr.reduce((sum, s) => sum + s.durationMs, 0);
+  return arr.reduce((sum, s) => sum + (s.durationMs || 0), 0);
 }
 
 function getWeekStart(d) {
@@ -625,7 +675,7 @@ function getWeekStart(d) {
 
 function getDaysWithWork() {
   const set = new Set();
-  sessions.forEach(s => set.add(dateKey(new Date(s.start))));
+  state.sessions.forEach(s => set.add(dateStr(new Date(s.start))));
   return set;
 }
 
@@ -633,12 +683,10 @@ function getStreak() {
   const days = [...getDaysWithWork()].sort().reverse();
   if (!days.length) return 0;
   let streak = 0;
-  const today = dateKey(new Date());
+  const today = todayStr();
   let check = new Date();
-  if (!days.includes(today)) {
-    check.setDate(check.getDate() - 1);
-  }
-  while (days.includes(dateKey(check))) {
+  if (!days.includes(today)) check.setDate(check.getDate() - 1);
+  while (days.includes(dateStr(check))) {
     streak++;
     check.setDate(check.getDate() - 1);
   }
@@ -646,52 +694,53 @@ function getStreak() {
 }
 
 function toggleTimer() {
-  if (activeStart) finishWork();
+  if (state.activeStart) finishWork();
   else startWork();
 }
 
 function startWork() {
-  activeStart = new Date();
-  localStorage.setItem(ACTIVE_KEY, activeStart.toISOString());
+  state.activeStart = new Date().toISOString();
+  save();
   startTimerLoop();
-  updateTimerUI(true);
+  renderTimer();
 }
 
 function startTimerLoop() {
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
-    if (activeStart) {
-      document.getElementById('timerDisplay').textContent = formatTimer(Date.now() - activeStart.getTime());
+    if (state.activeStart) {
+      document.getElementById('timerDisplay').textContent =
+        formatTimer(Date.now() - new Date(state.activeStart).getTime());
     }
   }, 1000);
 }
 
 function finishWork() {
-  if (!activeStart) return;
+  if (!state.activeStart) return;
+  const start = new Date(state.activeStart);
   const end = new Date();
-  const durationMs = end - activeStart;
+  const durationMs = end - start;
   if (durationMs < 10000) {
     showToast('10秒いじょうで記録できるよ');
     return;
   }
-  sessions.unshift({
-    id: Date.now().toString(36),
-    start: activeStart.toISOString(),
+  state.sessions.unshift({
+    id: uid(),
+    start: start.toISOString(),
     end: end.toISOString(),
     durationMs
   });
-  saveSessions();
-  localStorage.removeItem(ACTIVE_KEY);
-  activeStart = null;
+  state.activeStart = null;
+  save();
   if (timerInterval) clearInterval(timerInterval);
-  updateTimerUI(false);
+  renderTimer();
   showToast(`${formatDuration(durationMs)} 記録したよ！`);
   spawnConfetti();
-  updateTodayMini();
   if (document.getElementById('screen-records').classList.contains('active')) renderRecords();
 }
 
-function updateTimerUI(running) {
+function renderTimer() {
+  const running = !!state.activeStart;
   const display = document.getElementById('timerDisplay');
   const hint = document.getElementById('timerHint');
   const hero = document.getElementById('timerHero');
@@ -703,7 +752,7 @@ function updateTimerUI(running) {
     hero.classList.add('working');
     btn.className = 'btn-main btn-stop';
     btn.innerHTML = '🎀 作業終了';
-    display.textContent = formatTimer(Date.now() - activeStart.getTime());
+    display.textContent = formatTimer(Date.now() - new Date(state.activeStart).getTime());
   } else {
     display.classList.remove('running');
     display.textContent = '00:00:00';
@@ -712,11 +761,8 @@ function updateTimerUI(running) {
     btn.className = 'btn-main btn-start';
     btn.innerHTML = '<span class="btn-play-icon"></span>はじめる';
   }
-}
 
-function updateTodayMini() {
-  const today = dateKey(new Date());
-  const todaySessions = getSessionsForDate(today);
+  const todaySessions = getSessionsForDate(todayStr());
   const ms = getTotalMs(todaySessions);
   document.getElementById('todayTotal').textContent =
     `${formatDuration(ms)} · ${todaySessions.length}回`;
@@ -733,7 +779,7 @@ function switchScreen(name) {
 }
 
 function setRecordView(view) {
-  recordView = view;
+  state.recordView = view;
   document.querySelectorAll('.view-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.view === view);
   });
@@ -742,97 +788,97 @@ function setRecordView(view) {
 
 function renderRecords() {
   const body = document.getElementById('recordsBody');
-  if (recordView === 'calendar') body.innerHTML = renderCalendarView();
-  else if (recordView === 'week') body.innerHTML = renderWeekView();
+  if (state.recordView === 'calendar') body.innerHTML = renderCalendarView();
+  else if (state.recordView === 'week') body.innerHTML = renderWeekView();
   else body.innerHTML = renderChartView();
 }
 
 function renderCalendarView() {
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(state.calYear, state.calMonth + 1, 0).getDate();
+  const firstDay = new Date(state.calYear, state.calMonth, 1).getDay();
   const workDays = getDaysWithWork();
-  const todayKey = dateKey(new Date());
-  const weekdays = ['日','月','火','水','木','金','土'];
+  const todayKey = todayStr();
+  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
 
   let cells = '';
   for (let i = 0; i < firstDay; i++) cells += '<div class="cal-day empty"></div>';
   for (let d = 1; d <= daysInMonth; d++) {
-    const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const key = `${state.calYear}-${String(state.calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const hasWork = workDays.has(key);
     const isToday = key === todayKey;
-    const isSelected = key === selectedDate;
+    const isSelected = key === state.selectedDate;
     let cls = 'cal-day';
     if (hasWork) cls += ' has-work';
     if (isToday) cls += ' today';
     if (isSelected) cls += ' selected';
     const content = hasWork ? pawStampHtml() : d;
-    cells += `<div class="${cls}" onclick="selectDate('${key}')">${content}</div>`;
+    cells += `<button type="button" class="${cls}" onclick="selectDate('${esc(key)}')">${content}</button>`;
   }
 
-  const selSessions = getSessionsForDate(selectedDate);
+  const selSessions = getSessionsForDate(state.selectedDate);
   const selMs = getTotalMs(selSessions);
-  const [sy, sm, sd] = selectedDate.split('-');
-  const monthSessions = sessions.filter(s => {
+  const [, sm, sd] = state.selectedDate.split('-');
+  const monthSessions = state.sessions.filter(s => {
     const d = new Date(s.start);
-    return d.getFullYear() === calYear && d.getMonth() === calMonth;
+    return d.getFullYear() === state.calYear && d.getMonth() === state.calMonth;
   });
   const monthMs = getTotalMs(monthSessions);
-  const monthDays = new Set(monthSessions.map(s => dateKey(new Date(s.start)))).size;
+  const monthDays = new Set(monthSessions.map(s => dateStr(new Date(s.start)))).size;
 
   return `
     <div class="cal-card">
       <div class="cal-nav">
-        <button onclick="changeMonth(-1)">‹</button>
-        <div class="cal-month">${calYear} / ${String(calMonth+1).padStart(2,'0')}</div>
-        <button onclick="changeMonth(1)">›</button>
+        <button type="button" onclick="changeMonth(-1)">‹</button>
+        <div class="cal-month">${state.calYear} / ${String(state.calMonth + 1).padStart(2, '0')}</div>
+        <button type="button" onclick="changeMonth(1)">›</button>
       </div>
       <div class="cal-weekdays">${weekdays.map(w => `<div class="cal-wd">${w}</div>`).join('')}</div>
       <div class="cal-grid">${cells}</div>
     </div>
     <div class="sec-label">
       <svg class="ribbon-deco" viewBox="0 0 16 16"><path d="M8 2 C5 6 2 6 2 10 C2 13 5 14 8 12 C11 14 14 13 14 10 C14 6 11 6 8 2Z" fill="#E8B4B8"/></svg>
-      ${sm} / ${sd}
+      ${esc(sm)} / ${esc(sd)}
     </div>
     <div class="summary-card">
       <div class="summary-row"><span class="summary-key">お仕事した回数</span><span class="summary-val">${selSessions.length}回</span></div>
-      <div class="summary-row"><span class="summary-key">お仕事時間</span><span class="summary-val">${formatDuration(selMs)}</span></div>
+      <div class="summary-row"><span class="summary-key">お仕事時間</span><span class="summary-val">${esc(formatDuration(selMs))}</span></div>
     </div>
     <div class="sec-label">${pawImg(16)} 月間サマリー</div>
     <div class="summary-card">
       <div class="summary-row"><span class="summary-key">月のお仕事回数</span><span class="summary-val">${monthSessions.length}回</span></div>
-      <div class="summary-row"><span class="summary-key">月のお仕事時間</span><span class="summary-val">${formatDuration(monthMs)}</span></div>
+      <div class="summary-row"><span class="summary-key">月のお仕事時間</span><span class="summary-val">${esc(formatDuration(monthMs))}</span></div>
       <div class="summary-row"><span class="summary-key">お仕事した日数</span><span class="summary-val">${monthDays}日</span></div>
     </div>`;
 }
 
 function renderWeekView() {
-  const weekdays = ['日','月','火','水','木','金','土'];
-  const todayKey = dateKey(new Date());
+  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+  const todayKey = todayStr();
   const weekDays = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart);
+    const d = new Date(state.weekStart);
     d.setDate(d.getDate() + i);
     weekDays.push(d);
   }
 
   const dayHeaders = weekDays.map(d => {
-    const key = dateKey(d);
+    const key = dateStr(d);
     const hasWork = getSessionsForDate(key).length > 0;
     const isToday = key === todayKey;
-    const isSelected = key === selectedDate;
+    const isSelected = key === state.selectedDate;
     let cls = 'week-day-num';
     if (isToday) cls += ' today';
     if (isSelected) cls += ' selected';
     const stamp = hasWork ? `<div class="week-mini-stamp">${pawImg(null)}</div>` : '';
-    return `<div class="week-day-wrap"><div class="week-day-name">${weekdays[d.getDay()]}</div><div class="${cls}" onclick="selectDate('${key}')">${d.getDate()}</div>${stamp}</div>`;
+    return `<div class="week-day-wrap"><div class="week-day-name">${weekdays[d.getDay()]}</div><div class="${cls}" onclick="selectDate('${esc(key)}')">${d.getDate()}</div>${stamp}</div>`;
   }).join('');
 
   const startHour = 8, endHour = 22;
   const hours = [];
   for (let h = startHour; h <= endHour; h += 2) hours.push(`${h}:00`);
 
-  const blocks = weekDays.map((d, colIdx) => {
-    const daySessions = getSessionsForDate(dateKey(d));
+  const blocks = weekDays.map(d => {
+    const daySessions = getSessionsForDate(dateStr(d));
     return daySessions.map(s => {
       const start = new Date(s.start);
       const end = new Date(s.end);
@@ -845,18 +891,18 @@ function renderWeekView() {
     }).join('');
   });
 
-  const selSessions = getSessionsForDate(selectedDate);
+  const selSessions = getSessionsForDate(state.selectedDate);
   const selMs = getTotalMs(selSessions);
-  const weekSessions = weekDays.flatMap(d => getSessionsForDate(dateKey(d)));
+  const weekSessions = weekDays.flatMap(d => getSessionsForDate(dateStr(d)));
   const weekMs = getTotalMs(weekSessions);
-  const weekWorkDays = weekDays.filter(d => getSessionsForDate(dateKey(d)).length > 0).length;
+  const weekWorkDays = weekDays.filter(d => getSessionsForDate(dateStr(d)).length > 0).length;
 
   return `
     <div class="week-card">
       <div class="cal-nav" style="margin-bottom:12px">
-        <button onclick="changeWeek(-1)">‹</button>
-        <div class="cal-month">${weekDays[0].getMonth()+1}.${weekDays[0].getDate()} – ${weekDays[6].getMonth()+1}.${weekDays[6].getDate()}</div>
-        <button onclick="changeWeek(1)">›</button>
+        <button type="button" onclick="changeWeek(-1)">‹</button>
+        <div class="cal-month">${weekDays[0].getMonth() + 1}.${weekDays[0].getDate()} – ${weekDays[6].getMonth() + 1}.${weekDays[6].getDate()}</div>
+        <button type="button" onclick="changeWeek(1)">›</button>
       </div>
       <div class="week-days">${dayHeaders}</div>
       <div class="week-timeline">
@@ -869,28 +915,28 @@ function renderWeekView() {
     <div class="sec-label">週間サマリー</div>
     <div class="summary-card">
       <div class="summary-row"><span class="summary-key">週のお仕事回数</span><span class="summary-val">${weekSessions.length}回</span></div>
-      <div class="summary-row"><span class="summary-key">週のお仕事時間</span><span class="summary-val">${formatDuration(weekMs)}</span></div>
+      <div class="summary-row"><span class="summary-key">週のお仕事時間</span><span class="summary-val">${esc(formatDuration(weekMs))}</span></div>
       <div class="summary-row"><span class="summary-key">お仕事した日数</span><span class="summary-val">${weekWorkDays} / 7</span></div>
-      <div class="summary-row"><span class="summary-key">日平均お仕事時間</span><span class="summary-val">${formatDuration(weekMs / 7)}</span></div>
+      <div class="summary-row"><span class="summary-key">日平均お仕事時間</span><span class="summary-val">${esc(formatDuration(weekMs / 7))}</span></div>
     </div>
     <div class="sec-label">
       <svg class="ribbon-deco" viewBox="0 0 16 16"><path d="M8 2 C5 6 2 6 2 10 C2 13 5 14 8 12 C11 14 14 13 14 10 C14 6 11 6 8 2Z" fill="#E8B4B8"/></svg>
-      選択日：${formatDuration(selMs)} · ${selSessions.length}回
+      選択日：${esc(formatDuration(selMs))} · ${selSessions.length}回
     </div>`;
 }
 
 function renderChartView() {
   const weekDays = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart);
+    const d = new Date(state.weekStart);
     d.setDate(d.getDate() + i);
     weekDays.push(d);
   }
-  const weekdays = ['日','月','火','水','木','金','土'];
-  const maxMs = Math.max(...weekDays.map(d => getTotalMs(getSessionsForDate(dateKey(d)))), 1);
+  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+  const maxMs = Math.max(...weekDays.map(d => getTotalMs(getSessionsForDate(dateStr(d)))), 1);
 
   const bars = weekDays.map(d => {
-    const ms = getTotalMs(getSessionsForDate(dateKey(d)));
+    const ms = getTotalMs(getSessionsForDate(dateStr(d)));
     const pct = (ms / maxMs) * 100;
     const min = Math.floor(ms / 60000);
     return `<div class="chart-bar-wrap">
@@ -900,36 +946,36 @@ function renderChartView() {
     </div>`;
   }).join('');
 
-  const weekSessions = weekDays.flatMap(d => getSessionsForDate(dateKey(d)));
+  const weekSessions = weekDays.flatMap(d => getSessionsForDate(dateStr(d)));
   const weekMs = getTotalMs(weekSessions);
-  const weekWorkDays = weekDays.filter(d => getSessionsForDate(dateKey(d)).length > 0).length;
+  const weekWorkDays = weekDays.filter(d => getSessionsForDate(dateStr(d)).length > 0).length;
   const avgSession = weekSessions.length ? weekMs / weekSessions.length : 0;
 
-  const selSessions = getSessionsForDate(selectedDate);
+  const selSessions = getSessionsForDate(state.selectedDate);
   const selMs = getTotalMs(selSessions);
-  const [sy, sm, sd] = selectedDate.split('-');
+  const [, sm, sd] = state.selectedDate.split('-');
 
   return `
     <div class="chart-card">
       <div class="cal-nav" style="margin-bottom:16px">
-        <button onclick="changeWeek(-1)">‹</button>
+        <button type="button" onclick="changeWeek(-1)">‹</button>
         <div class="cal-month">週間グラフ</div>
-        <button onclick="changeWeek(1)">›</button>
+        <button type="button" onclick="changeWeek(1)">›</button>
       </div>
       <div class="chart-bars">${bars}</div>
     </div>
-    <div class="sec-label">${sm} / ${sd}</div>
+    <div class="sec-label">${esc(sm)} / ${esc(sd)}</div>
     <div class="summary-card">
       <div class="summary-row"><span class="summary-key">お仕事した回数</span><span class="summary-val">${selSessions.length}回</span></div>
-      <div class="summary-row"><span class="summary-key">お仕事時間</span><span class="summary-val">${formatDuration(selMs)}</span></div>
+      <div class="summary-row"><span class="summary-key">お仕事時間</span><span class="summary-val">${esc(formatDuration(selMs))}</span></div>
     </div>
     <div class="sec-label">🎀 週間サマリー</div>
     <div class="summary-card">
       <div class="summary-row"><span class="summary-key">お仕事した回数</span><span class="summary-val">${weekSessions.length}回</span></div>
-      <div class="summary-row"><span class="summary-key">お仕事時間</span><span class="summary-val">${formatDuration(weekMs)}</span></div>
+      <div class="summary-row"><span class="summary-key">お仕事時間</span><span class="summary-val">${esc(formatDuration(weekMs))}</span></div>
       <div class="summary-row"><span class="summary-key">お仕事した日数</span><span class="summary-val">${weekWorkDays} / 7</span></div>
-      <div class="summary-row"><span class="summary-key">平均お仕事時間</span><span class="summary-val">${formatDuration(avgSession)}</span></div>
-      <div class="summary-row"><span class="summary-key">日平均お仕事時間</span><span class="summary-val">${formatDuration(weekMs / 7)}</span></div>
+      <div class="summary-row"><span class="summary-key">平均お仕事時間</span><span class="summary-val">${esc(formatDuration(avgSession))}</span></div>
+      <div class="summary-row"><span class="summary-key">日平均お仕事時間</span><span class="summary-val">${esc(formatDuration(weekMs / 7))}</span></div>
     </div>`;
 }
 
@@ -939,13 +985,13 @@ function renderProfile() {
   const pawCount = Math.min(Math.max(streak, 1), 5);
   document.getElementById('streakPaws').innerHTML = Array(pawCount).fill(pawStampMiniHtml()).join('');
 
-  document.getElementById('totalSessions').textContent = sessions.length + '回';
-  document.getElementById('totalTime').textContent = formatDuration(getTotalMs(sessions));
+  document.getElementById('totalSessions').textContent = state.sessions.length + '回';
+  document.getElementById('totalTime').textContent = formatDuration(getTotalMs(state.sessions));
   document.getElementById('totalDays').textContent = getDaysWithWork().size + '日';
-  const avg = sessions.length ? getTotalMs(sessions) / sessions.length : 0;
+  const avg = state.sessions.length ? getTotalMs(state.sessions) / state.sessions.length : 0;
   document.getElementById('avgSession').textContent = formatDuration(avg);
 
-  const recent = sessions.slice(0, 10);
+  const recent = state.sessions.slice(0, 10);
   const list = document.getElementById('recentSessions');
   if (!recent.length) {
     list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--ink-light);font-size:13px;display:flex;flex-direction:column;align-items:center;gap:8px">
@@ -954,34 +1000,34 @@ function renderProfile() {
   }
   list.innerHTML = recent.map(s => {
     const start = new Date(s.start);
-    const key = dateKey(start);
-    const [y, m, d] = key.split('-');
+    const key = dateStr(start);
+    const [, m, d] = key.split('-');
     return `<div class="session-item">
-      <div class="session-time">${formatTime(start)}</div>
-      <div class="session-detail">${m}/${d}</div>
-      <div class="session-dur">${pawInline()}${formatDuration(s.durationMs)}</div>
+      <div class="session-time">${esc(formatTime(start))}</div>
+      <div class="session-detail">${esc(m)}/${esc(d)}</div>
+      <div class="session-dur">${pawInline()}${esc(formatDuration(s.durationMs))}</div>
     </div>`;
   }).join('');
 }
 
 function selectDate(key) {
-  selectedDate = key;
+  state.selectedDate = key;
   const d = parseDate(key);
-  calYear = d.getFullYear();
-  calMonth = d.getMonth();
-  weekStart = getWeekStart(d);
+  state.calYear = d.getFullYear();
+  state.calMonth = d.getMonth();
+  state.weekStart = getWeekStart(d);
   renderRecords();
 }
 
 function changeMonth(delta) {
-  calMonth += delta;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  if (calMonth < 0) { calMonth = 11; calYear--; }
+  state.calMonth += delta;
+  if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+  if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
   renderRecords();
 }
 
 function changeWeek(delta) {
-  weekStart.setDate(weekStart.getDate() + delta * 7);
+  state.weekStart.setDate(state.weekStart.getDate() + delta * 7);
   renderRecords();
 }
 
@@ -1007,9 +1053,22 @@ function spawnConfetti() {
   }
 }
 
-loadData();
+load();
 injectPawIcons();
-updateTodayMini();
+renderTimer();
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') save();
+});
+window.addEventListener('pagehide', save);
+window.addEventListener('pageshow', e => {
+  if (e.persisted) {
+    load();
+    renderTimer();
+    if (document.getElementById('screen-records').classList.contains('active')) renderRecords();
+    if (document.getElementById('screen-profile').classList.contains('active')) renderProfile();
+  }
+});
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});

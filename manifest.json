@@ -1,13 +1,12 @@
 {
   "name": "もふぱう お仕事記録",
   "short_name": "もふぱう",
-  "description": "ゆるかわいいお仕事時間トラッカー",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#F5F0EA",
   "theme_color": "#B8956A",
   "orientation": "portrait",
   "icons": [
-    { "src": "icon-192.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "icon-192.svg", "sizes": "any", "type": "image/svg+xml" }
   ]
 }
