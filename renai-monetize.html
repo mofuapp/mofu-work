@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#E8B4B8">
+<title>恋愛×note マネタイズ百科</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#FBF7F4;--card:#fff;--cream:#FFF9F5;
+  --rose:#E8B4B8;--rose-light:#FCEEF0;--rose-deep:#D4898E;
+  --lav:#C9B8E8;--lav-light:#F0EBFA;
+  --sage:#A8C5A0;--sage-light:#E8F3E5;
+  --peach:#F5C4A8;--peach-light:#FFF0E8;
+  --ink:#4A3F45;--ink-soft:#7A6E74;--ink-light:#B0A5AA;
+  --radius:20px;--nav-h:72px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --font:'M PLUS Rounded 1c',-apple-system,sans-serif;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--ink);overflow:hidden}
+body{display:flex;flex-direction:column}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(circle at 95% 5%,rgba(232,180,184,.3) 0%,transparent 40%),
+    radial-gradient(circle at 5% 95%,rgba(201,184,232,.25) 0%,transparent 40%),
+    radial-gradient(circle at 50% 50%,rgba(245,196,168,.15) 0%,transparent 55%);
+}
+
+.screen{display:none;flex:1;flex-direction:column;overflow:hidden;padding-top:var(--safe-top);position:relative;z-index:1}
+.screen.active{display:flex}
+.scroll{padding:0 16px calc(var(--nav-h) + var(--safe-bottom) + 20px);flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* header */
+.page-head{padding:20px 16px 12px;text-align:center}
+.page-head h1{font-size:20px;font-weight:800;letter-spacing:.02em}
+.page-head p{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.5}
+
+/* hero */
+.hero{
+  margin:0 0 16px;padding:22px 18px;
+  background:linear-gradient(135deg,var(--rose-light) 0%,var(--lav-light) 100%);
+  border-radius:var(--radius);border:2px solid rgba(255,255,255,.8);
+  box-shadow:0 8px 24px rgba(212,137,142,.12);
+  position:relative;overflow:hidden;
+}
+.hero::after{content:'💕';position:absolute;right:16px;top:14px;font-size:28px;opacity:.5}
+.hero-tag{
+  display:inline-block;font-size:10px;font-weight:700;
+  background:#fff;padding:4px 10px;border-radius:999px;color:var(--rose-deep);margin-bottom:10px;
+}
+.hero h2{font-size:17px;font-weight:800;line-height:1.45;margin-bottom:8px}
+.hero p{font-size:12px;color:var(--ink-soft);line-height:1.6}
+
+/* quick grid */
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.quick-btn{
+  background:var(--card);border:2px solid var(--rose-light);
+  border-radius:16px;padding:14px 12px;text-align:left;
+  cursor:pointer;transition:transform .15s,box-shadow .15s;
+  box-shadow:0 3px 0 rgba(232,180,184,.2);
+}
+.quick-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(232,180,184,.2)}
+.quick-btn .icon{font-size:22px;margin-bottom:6px}
+.quick-btn .label{font-size:13px;font-weight:700;line-height:1.3}
+.quick-btn .sub{font-size:10px;color:var(--ink-light);margin-top:3px}
+
+/* section title */
+.sec-title{
+  font-size:13px;font-weight:800;color:var(--rose-deep);
+  margin:20px 0 10px;display:flex;align-items:center;gap:6px;
+}
+.sec-title::before{content:'';width:4px;height:14px;background:var(--rose);border-radius:2px}
+
+/* cards & accordion */
+.card{
+  background:var(--card);border-radius:var(--radius);
+  border:2px solid var(--cream);margin-bottom:10px;overflow:hidden;
+  box-shadow:0 2px 12px rgba(74,63,69,.04);
+}
+.acc-btn{
+  width:100%;padding:14px 16px;display:flex;align-items:center;gap:10px;
+  background:none;border:none;font-family:var(--font);cursor:pointer;text-align:left;
+}
+.acc-btn .num{
+  flex-shrink:0;width:28px;height:28px;border-radius:10px;
+  background:var(--rose-light);color:var(--rose-deep);
+  font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;
+}
+.acc-btn .txt{flex:1}
+.acc-btn .txt strong{display:block;font-size:14px;font-weight:700;line-height:1.35}
+.acc-btn .txt span{font-size:11px;color:var(--ink-soft);margin-top:2px;display:block}
+.acc-btn .chev{font-size:12px;color:var(--ink-light);transition:transform .2s}
+.acc-btn.open .chev{transform:rotate(180deg)}
+.acc-body{display:none;padding:0 16px 16px;font-size:13px;line-height:1.7;color:var(--ink-soft)}
+.acc-body.open{display:block}
+.acc-body ul,.acc-body ol{padding-left:18px;margin:8px 0}
+.acc-body li{margin:4px 0}
+.acc-body strong{color:var(--ink);font-weight:700}
+.acc-body .tip{
+  background:var(--sage-light);border-radius:12px;padding:10px 12px;
+  font-size:12px;margin-top:10px;color:var(--ink);
+}
+
+/* tags */
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px}
+.tag-v{background:var(--lav-light);color:#7A6A9A}
+.tag-p{background:var(--peach-light);color:#A07050}
+.tag-a{background:var(--sage-light);color:#5A8050}
+.tag-n{background:var(--rose-light);color:var(--rose-deep)}
+
+/* flow */
+.flow-step{
+  display:flex;gap:12px;margin-bottom:12px;position:relative;
+}
+.flow-step:not(:last-child)::after{
+  content:'';position:absolute;left:15px;top:32px;bottom:-4px;
+  width:2px;background:var(--rose-light);
+}
+.flow-num{
+  flex-shrink:0;width:32px;height:32px;border-radius:50%;
+  background:var(--rose);color:#fff;font-size:13px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+}
+.flow-content{flex:1;padding-bottom:4px}
+.flow-content h4{font-size:13px;font-weight:700;margin-bottom:4px}
+.flow-content p{font-size:12px;color:var(--ink-soft);line-height:1.55}
+
+/* table */
+.mini-table{width:100%;border-collapse:collapse;font-size:11px;margin:10px 0}
+.mini-table th,.mini-table td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--cream);vertical-align:top}
+.mini-table th{font-weight:700;color:var(--ink);background:var(--cream);font-size:10px}
+.mini-table td{color:var(--ink-soft)}
+
+/* prompt box */
+.prompt-box{
+  background:#2D2A2E;color:#F5F0EA;border-radius:14px;
+  padding:14px;font-size:11px;line-height:1.65;
+  font-family:ui-monospace,monospace;white-space:pre-wrap;
+  max-height:280px;overflow-y:auto;margin:10px 0;
+}
+.copy-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--rose);color:#fff;border:none;
+  padding:8px 14px;border-radius:999px;
+  font-family:var(--font);font-size:12px;font-weight:700;
+  cursor:pointer;margin-top:4px;
+}
+.copy-btn.ok{background:var(--sage)}
+
+/* checklist */
+.check-item{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:10px 0;border-bottom:1px dashed var(--cream);
+  font-size:13px;line-height:1.5;
+}
+.check-item input{
+  width:20px;height:20px;margin-top:2px;accent-color:var(--rose);
+  flex-shrink:0;
+}
+
+/* search */
+.search-wrap{padding:0 16px 12px}
+.search{
+  width:100%;padding:12px 16px 12px 40px;
+  border:2px solid var(--rose-light);border-radius:999px;
+  font-family:var(--font);font-size:14px;background:#fff;
+  outline:none;
+}
+.search:focus{border-color:var(--rose)}
+.search-icon{position:relative}
+.search-icon::before{
+  content:'🔍';position:absolute;left:28px;top:50%;transform:translateY(-50%);
+  font-size:14px;pointer-events:none;
+}
+
+/* bottom nav */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--safe-bottom));
+  padding-bottom:var(--safe-bottom);
+  background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
+  border-top:1px solid var(--rose-light);
+  display:flex;z-index:100;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;background:none;border:none;font-family:var(--font);
+  font-size:10px;font-weight:700;color:var(--ink-light);cursor:pointer;padding-top:8px;
+}
+.nav-btn .ico{font-size:22px;line-height:1}
+.nav-btn.active{color:var(--rose-deep)}
+
+.hidden{display:none!important}
+mark{background:var(--yellow-soft, #FFF5D6);padding:0 2px;border-radius:2px}
+.back-bar{
+  display:flex;align-items:center;gap:8px;padding:12px 16px 0;
+}
+.back-btn{
+  background:var(--card);border:2px solid var(--rose-light);
+  border-radius:999px;padding:6px 14px;font-family:var(--font);
+  font-size:12px;font-weight:700;color:var(--rose-deep);cursor:pointer;
+}
+
+@media(min-width:600px){
+  body{max-width:480px;margin:0 auto;border-left:1px solid var(--rose-light);border-right:1px solid var(--rose-light)}
+  .nav{max-width:480px;left:50%;transform:translateX(-50%)}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HOME ===== -->
+<div class="screen active" id="screen-home">
+  <div class="scroll">
+    <div class="page-head">
+      <h1>💗 恋愛×note 百科</h1>
+      <p>マネタイズノウハウを可愛く整理<br>迷ったらここから！</p>
+    </div>
+
+    <div class="hero">
+      <span class="hero-tag">最終更新 2026/06/08</span>
+      <h2>女性向け恋愛ジャンル<br>マネタイズまとめ</h2>
+      <p>動画7章・てっど式PDF・8項目・分析4点・プロンプトを1ページに。今後も追記していくよ✨</p>
+    </div>
+
+    <div class="search-icon">
+      <div class="search-wrap" style="padding:0 0 14px">
+        <input type="search" class="search" id="globalSearch" placeholder="キーワード検索（復縁、セールス…）" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="sec-title">⚡ 今すぐ見る</div>
+    <div class="quick-grid">
+      <button class="quick-btn" data-go="flow"><div class="icon">🗺️</div><div class="label">全体フロー</div><div class="sub">何から始める？</div></button>
+      <button class="quick-btn" data-go="check"><div class="icon">✅</div><div class="label">チェックリスト</div><div class="sub">停滞・診断</div></button>
+      <button class="quick-btn" data-go="prompt"><div class="icon">✨</div><div class="label">プロンプト</div><div class="sub">投稿5本生成</div></button>
+      <button class="quick-btn" data-go="numbers"><div class="icon">📊</div><div class="label">数字一覧</div><div class="sub">単価・CTR・比率</div></button>
+    </div>
+
+    <div class="sec-title">📚 コンテンツ一覧</div>
+    <div id="homeList">
+      <div class="card searchable" data-keywords="動画 7章 AI 10分">
+        <button class="acc-btn" data-acc>
+          <span class="num">📹</span>
+          <span class="txt"><strong>動画7章（AI×恋愛）</strong><span>設計→note→投稿→セールス→ロードマップ</span></span>
+          <span class="chev">▼</span>
+        </button>
+        <div class="acc-body">
+          <div class="tags"><span class="tag tag-v">動画</span></div>
+          <p>第1章：AI×女性向け恋愛・1日10分・月20万+<br>第2章：ジャンル3選・アカウント設計・誰→誰<br>第3章：<strong>note先行</strong>・リサーチ・AI執筆・レター<br>第4章：体験談/価値観投稿・抽象化・リライト<br>第5章：セールス投稿（5要素＋知らなきゃ）<br>第6章：停滞時5対処<br>第7章：ローンチ・商品設計・分析習慣</p>
+          <button class="copy-btn" data-go="videos">詳細を見る →</button>
+        </div>
+      </div>
+
+      <div class="card searchable" data-keywords="てっど PDF ストーリー レター">
+        <button class="acc-btn" data-acc>
+          <span class="num">📖</span>
+          <span class="txt"><strong>てっど式PDF（4編）</strong><span>ストーリー設計・無料レター8構成</span></span>
+          <span class="chev">▼</span>
+        </button>
+        <div class="acc-body">
+          <div class="tags"><span class="tag tag-p">PDF</span></div>
+          <p>①アカウント設計：参考垢1個→<strong>ストーリー分解</strong>→構築<br>②コンテンツ：ベネフィット3条件・満足度3コツ・<strong>レター8構成</strong><br>③運用：ポスト2型・初期8:2・集客＝noteビュー<br>④オワコン回避＋女性向け4章（3歩先・界隈・人間性・共感リサーチ）</p>
+          <button class="copy-btn" data-go="ted">詳細を見る →</button>
+        </div>
+      </div>
+
+      <div class="card searchable" data-keywords="8項目 単価 無料 CTR">
+        <button class="acc-btn" data-acc>
+          <span class="num">8</span>
+          <span class="txt"><strong>売れ行き8項目</strong><span>単価・離脱率・クリック率</span></span>
+          <span class="chev">▼</span>
+        </button>
+        <div class="acc-body">
+          <div class="tags"><span class="tag tag-a">追加</span></div>
+          <p>①初動980円 ②無料note ③商品3〜4本 ④投稿時間・頻度 ⑤レター離脱 ⑥CTR 3〜5% ⑦プレゼント企画 ⑧コミュニケーション密度</p>
+          <button class="copy-btn" data-go="eight">詳細を見る →</button>
+        </div>
+      </div>
+
+      <div class="card searchable" data-keywords="分析 独自性 冒頭 問">
+        <button class="acc-btn" data-acc>
+          <span class="num">4</span>
+          <span class="txt"><strong>ポスト分析4着眼点</strong><span>伸びない時の見方</span></span>
+          <span class="chev">▼</span>
+        </button>
+        <div class="acc-body">
+          <div class="tags"><span class="tag tag-a">追加</span></div>
+          <p>❶独自性 ❷表現（読みやすさ） ❸問（ターゲットの悩み起点） ❹冒頭（1文で何を言うか）</p>
+          <button class="copy-btn" data-go="analysis">詳細を見る →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-title">🔗 動画リンク</div>
+    <div class="card">
+      <div class="acc-body open" style="padding:14px 16px">
+        <p style="font-size:12px;line-height:2">
+          <a href="https://youtu.be/qJjBa2eYE7U" target="_blank" rel="noopener">第1章</a> ·
+          <a href="https://youtu.be/HCN2RRyHxMk" target="_blank" rel="noopener">第2章</a> ·
+          <a href="https://youtu.be/2J_WE0Q2U9A" target="_blank" rel="noopener">第3章</a> ·
+          <a href="https://youtu.be/RyXgQnm6CjI" target="_blank" rel="noopener">第4章</a> ·
+          <a href="https://youtu.be/pknYx6BWZwc" target="_blank" rel="noopener">第5章</a> ·
+          <a href="https://youtu.be/s-4PuU9VVjQ" target="_blank" rel="noopener">第6章</a> ·
+          <a href="https://youtu.be/z7VRHlMZCJw" target="_blank" rel="noopener">第7章</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FLOW ===== -->
+<div class="screen" id="screen-flow">
+  <div class="scroll">
+    <div class="page-head"><h1>🗺️ 全体フロー</h1><p>ゼロから月10〜20万までの道のり</p></div>
+
+    <div class="flow-step"><div class="flow-num">0</div><div class="flow-content"><h4>設計（第2章＋PDF①）</h4><p>ジャンル選定（復縁/本命/浮気）→ 参考垢1個 → ストーリー1000字 → プロフ3要素</p></div></div>
+    <div class="flow-step"><div class="flow-num">1</div><div class="flow-content"><h4>商品先行（第3章）</h4><p>売れてるnoteリサーチ → AI執筆 → レター → <strong>先にnote公開</strong>（フォロワー0でも可）</p></div></div>
+    <div class="flow-step"><div class="flow-num">2</div><div class="flow-content"><h4>日常投稿（第4章）</h4><p>体験談＋価値観（プロンプト）→ 毎日5分作成＋5分予約</p></div></div>
+    <div class="flow-step"><div class="flow-num">3</div><div class="flow-content"><h4>セールス（第5章）</h4><p>5要素＋「知らなきゃ」指示 → noteリンク。マグレリンクNG</p></div></div>
+    <div class="flow-step"><div class="flow-num">4</div><div class="flow-content"><h4>ローンチ（第7章）</h4><p>興味付け3〜5回 → 公開前日告知 → セール価格 → 1日3+3投稿</p></div></div>
+    <div class="flow-step"><div class="flow-num">5</div><div class="flow-content"><h4>成長・維持</h4><p>商品増（2980+1980×2+980）→ 無料note → LINE → 分析ノート習慣</p></div></div>
+
+    <div class="tip card" style="padding:16px;border:2px solid var(--sage-light)">
+      <strong>🌸 鉄則5つ</strong>
+      <ul style="margin-top:8px;padding-left:18px;font-size:12px;line-height:1.8;color:var(--ink-soft)">
+        <li>続ける・設計する（3日で諦めない）</li>
+        <li>求められているものを売る（自己流NG）</li>
+        <li>型は真似、ストーリーは独自</li>
+        <li>解決策は1つ</li>
+        <li>集客＝noteビュー（インプ≠集客）</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VIDEOS ===== -->
+<div class="screen" id="screen-videos">
+  <div class="back-bar"><button class="back-btn" data-go="home">← ホーム</button></div>
+  <div class="scroll">
+    <div class="page-head"><h1>📹 動画7章</h1><p>章ごとの要点</p></div>
+    <div id="videoCards"></div>
+  </div>
+</div>
+
+<!-- ===== TED ===== -->
+<div class="screen" id="screen-ted">
+  <div class="back-bar"><button class="back-btn" data-go="home">← ホーム</button></div>
+  <div class="scroll">
+    <div class="page-head"><h1>📖 てっど式PDF</h1><p>4編の核心</p></div>
+
+    <div class="card searchable" data-keywords="参考 アカウント ストーリー">
+      <button class="acc-btn open" data-acc><span class="num">①</span><span class="txt"><strong>アカウント設計編</strong><span>ストーリーが9割の差</span></span><span class="chev">▼</span></button>
+      <div class="acc-body open">
+        <p><strong>参考垢の条件</strong></p>
+        <table class="mini-table"><tr><th>項目</th><th>基準</th></tr>
+        <tr><td>SNSフォロワー</td><td>1000以下</td></tr>
+        <tr><td>note単価</td><td>2000円以上</td></tr>
+        <tr><td>noteフォロワー</td><td>100人以上</td></tr>
+        <tr><td>属人性</td><td>顔出し・声出しなし</td></tr></table>
+        <p><strong>3ステップ：</strong>参考垢1個 → ストーリー分解 → 構築（1000〜2000字）</p>
+        <div class="tip">💡 大枠は似てOK。別れ方・冷却期間・連絡手段など<strong>具体性</strong>で差別化＋説得力UP</div>
+      </div>
+    </div>
+
+    <div class="card searchable" data-keywords="ベネフィット レター 8構成">
+      <button class="acc-btn" data-acc><span class="num">②</span><span class="txt"><strong>コンテンツメイク編</strong><span>売れる条件＋レター8構成</span></span><span class="chev">▼</span></button>
+      <div class="acc-body">
+        <p><strong>売れる3条件：</strong>ベネフィット明確 / 圧倒的自信 / 発信からの文脈</p>
+        <p><strong>満足度3コツ：</strong>つまずき潰す / 実用性（テンプレ） / 結論＋ロジック</p>
+        <p style="margin-top:10px"><strong>無料レター8構成：</strong></p>
+        <ol style="font-size:12px;line-height:1.8">
+          <li>強烈な興味付け（結論断言 or 疑問オファー）</li>
+          <li>自己紹介（ストーリー）</li>
+          <li>再現性の証明</li>
+          <li>社会的証明（口コミ）</li>
+          <li>理想の未来</li>
+          <li>コンテンツ見出し</li>
+          <li>買った未来 / 買わない未来</li>
+          <li>ストーリー＋共感＋CTA</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card searchable" data-keywords="8:2 ストーリー 問題 集客">
+      <button class="acc-btn" data-acc><span class="num">③</span><span class="txt"><strong>運用編</strong><span>ポスト2型・初期比率</span></span><span class="chev">▼</span></button>
+      <div class="acc-body">
+        <p><strong>目的：</strong>認知拡大 ＋ 商品購入（いいね目的NG）</p>
+        <p><strong>2型：</strong></p>
+        <ul><li>❶ストーリーで共感（自分の物語に共感）</li>
+        <li>❷問題点指摘→答え提示→note</li></ul>
+        <p><strong>0〜300人：</strong>❶:❷ = <strong>8:2</strong>（300超でも❶は5以下にしない）</p>
+        <p><strong>集客＝noteビュー数</strong>（インプではない）</p>
+      </div>
+    </div>
+
+    <div class="card searchable" data-keywords="オワコン LINE 3歩先 味方">
+      <button class="acc-btn" data-acc><span class="num">④</span><span class="txt"><strong>オワコン回避＋女性向け</strong><span>リスト・界隈・ファン化</span></span><span class="chev">▼</span></button>
+      <div class="acc-body">
+        <p><strong>4対策：</strong>セールス固定 / アルゴリズム情報 / リスト（LINE相談） / 引用で絡む</p>
+        <p><strong>女性向け：</strong></p>
+        <ul>
+          <li>3歩先ポジション（強者NG・手の届く未来）</li>
+          <li>界隈に馴染む（10垢×30ポストリサーチ）</li>
+          <li>人間性でファン化（実績NG）</li>
+          <li>共感素材：TikTok/YouTubeコメント・恋愛ソング歌詞</li>
+          <li>徹底的に味方する（正論で否定NG）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 8 ITEMS ===== -->
+<div class="screen" id="screen-eight">
+  <div class="back-bar"><button class="back-btn" data-go="home">← ホーム</button></div>
+  <div class="scroll">
+    <div class="page-head"><h1>📊 売れ行き8項目</h1><p>note売上のチェックポイント</p></div>
+    <div id="eightCards"></div>
+  </div>
+</div>
+
+<!-- ===== ANALYSIS ===== -->
+<div class="screen" id="screen-analysis">
+  <div class="back-bar"><button class="back-btn" data-go="home">← ホーム</button></div>
+  <div class="scroll">
+    <div class="page-head"><h1>🔍 分析4着眼点</h1><p>伸びない投稿の見方</p></div>
+    <div class="card"><div class="acc-body open" style="padding:16px">
+      <p style="font-size:12px;margin-bottom:12px">分析は目的ではなく<strong>次の改善</strong>のため。うまくいかないポストを重点的に。</p>
+      <table class="mini-table">
+        <tr><th>#</th><th>問い</th><th>NG例</th></tr>
+        <tr><td>❶</td><td>ノウハウ以外の情報ある？</td><td>復縁手順の羅列だけ</td></tr>
+        <tr><td>❷</td><td>読みやすかった？</td><td>長文・AI感・改行なし</td></tr>
+        <tr><td>❸</td><td>ターゲットの「問」に答えてる？</td><td>狙いのないポスト</td></tr>
+        <tr><td>❹</td><td>冒頭で何を言うか伝わる？</td><td>1文目でスルー</td></tr>
+      </table>
+      <div class="tip">第4章プロンプト修正例：「男って〇〇なんだよねで冒頭固定」「納得感強めに」</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ===== PROMPT ===== -->
+<div class="screen" id="screen-prompt">
+  <div class="scroll">
+    <div class="page-head"><h1>✨ プロンプト集</h1><p>コピーしてChatGPTへ</p></div>
+
+    <div class="sec-title">📝 第4章：集客投稿</div>
+    <div class="card"><div class="acc-body open" style="padding:16px">
+      <p style="font-size:12px;margin-bottom:8px">5問に答えると体験談/価値観5本生成</p>
+      <div class="prompt-box" id="promptMain">あなたはXやスレッズで投稿される恋愛系のポストを作るアシスタントです。
+
+以下のルールに従い、体験談ポストまたは価値観ポストを5つ生成してください。
+
+⸻
+
+【💡事前に必ず質問すること】
+1. 投稿主の性別は？（例：男性／女性）
+2. 投稿のターゲットは？（例：復縁したい女性／セフレから本命になりたい女性）
+3. ポストに入れたい「要素」または「テーマ」は？
+4. ポストの種類は？（体験談ポスト or 価値観ポスト）
+5. 文字数の希望は？（通常：200字程度／長文：300字程度）
+
+⸻
+
+【🧩投稿構成（体験談ポスト）】
+① 一般的な男性心理の説明
+② 自分の実体験・エピソード
+③ そのときの感情や思考の構造
+④ 読者に安心や希望を与える結び
+
+⸻
+
+【🎯投稿構成（価値観ポスト）】
+① 世の中の思い込みや一般論を否定・再定義
+② 自分の視点・信じている価値観
+③ なぜその視点が有効なのかをロジカルに解説
+④ 読者が前向きになれる言葉で締めくくる
+
+⸻
+
+【📝出力ルール】
+• 5投稿まとめて出力（番号付き）
+• 各投稿は改行せず、1段落で完結
+• 太字・記号・絵文字などは使わない
+• 一人称は投稿主の性別に合わせる</div>
+      <button class="copy-btn" data-copy="promptMain">📋 コピーする</button>
+    </div></div>
+
+    <div class="sec-title">💰 第5章：セールス投稿</div>
+    <div class="card"><div class="acc-body open" style="padding:16px">
+      <p style="font-size:12px;line-height:1.6">① セールスレター → 「コンセプト、ターゲット、悩み、解決策、これを明確にして」<br>② 解決策1つを選び、以下をプロンプトチャットに貼る：</p>
+      <div class="prompt-box" id="promptSales">上記の情報を元に、解決策を知らなきゃいけないと思わせるポスト作って。最後に一言入れて。</div>
+      <button class="copy-btn" data-copy="promptSales">📋 コピーする</button>
+      <p style="font-size:11px;color:var(--ink-light);margin-top:10px">調整：「1でターゲットが納得してノートをクリックするように」「男って〇〇なんだよね、という冒頭で」</p>
+    </div></div>
+
+    <div class="sec-title">🔄 派生指示メモ</div>
+    <div class="card"><div class="acc-body open" style="padding:16px;font-size:12px;line-height:1.8">
+      <strong>伸び要素抽象化：</strong>「このポストの伸びた要素を抽象化して」→ テーマに入れて5本<br>
+      <strong>リライト：</strong>「これリライトして」（自分の投稿のみ）<br>
+      <strong>長文化：</strong>「もっと長く」→ 400〜450字<br>
+      <strong>CTA：</strong>「最後にフォロー促して」
+    </div></div>
+  </div>
+</div>
+
+<!-- ===== NUMBERS ===== -->
+<div class="screen" id="screen-numbers">
+  <div class="scroll">
+    <div class="page-head"><h1>📊 数字リファレンス</h1><p>迷ったらここ</p></div>
+    <table class="mini-table" style="background:var(--card);border-radius:var(--radius);overflow:hidden">
+      <tr><th>項目</th><th>数値</th></tr>
+      <tr><td>初動単価</td><td><strong>980円</strong>→10〜20部→値上げ</td></tr>
+      <tr><td>商品構成</td><td>2980 + 1980×2 + 980</td></tr>
+      <tr><td>マガジン</td><td>約4940円 / 1万円級も</td></tr>
+      <tr><td>月10万</td><td>1980+2980×21人</td></tr>
+      <tr><td>1日作業</td><td>10分（投稿5+予約5）</td></tr>
+      <tr><td>初期投稿比</td><td>ストーリー8 : 問題→答え2</td></tr>
+      <tr><td>1日投稿</td><td>初期3本 / 成長期5+5セールス</td></tr>
+      <tr><td>投稿時間</td><td>7-8 / 12 / 17-19 / 21-24</td></tr>
+      <tr><td>リンクCTR</td><td>有料note <strong>3〜5%</strong></td></tr>
+      <tr><td>無料note</td><td>有料の10倍クリック / 有料1:無料3〜5</td></tr>
+      <tr><td>セールス</td><td>1日3〜5回（固定化）</td></tr>
+      <tr><td>プレゼント</td><td>2ヶ月に1回</td></tr>
+      <tr><td>フォロワー目安</td><td>1〜2週で50〜100</td></tr>
+      <tr><td>ストーリー</td><td>1000〜2000字</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== CHECK ===== -->
+<div class="screen" id="screen-check">
+  <div class="scroll">
+    <div class="page-head"><h1>✅ チェックリスト</h1><p>タップで記録（端末に保存）</p></div>
+
+    <div class="sec-title">🚀 立ち上げ</div>
+    <div class="card" id="checkLaunch"></div>
+
+    <div class="sec-title">😰 停滞・売れない時</div>
+    <div class="card" id="checkStuck"></div>
+
+    <div class="sec-title">📈 分析4点</div>
+    <div class="card" id="checkAnalysis"></div>
+
+    <button class="copy-btn" style="margin:16px 0;width:100%;justify-content:center;display:flex" id="resetChecks">チェックをリセット</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" data-screen="home"><span class="ico">🏠</span>ホーム</button>
+  <button class="nav-btn" data-screen="flow"><span class="ico">🗺️</span>フロー</button>
+  <button class="nav-btn" data-screen="prompt"><span class="ico">✨</span>道具</button>
+  <button class="nav-btn" data-screen="check"><span class="ico">✅</span>チェック</button>
+  <button class="nav-btn" data-screen="numbers"><span class="ico">📊</span>数字</button>
+</nav>
+
+<script>
+const VIDEOS = [
+  {ch:1, title:'AI×恋愛・1日10分', points:['AI×女性向け恋愛','月20万+','体験談＝商品','ChatGPT執筆','X 200字/日10分']},
+  {ch:2, title:'アカウント設計', points:['ジャンル：復縁/本命/浮気','競合5垢＋ターゲットシート','一般人プロフ＞専門家','誰→誰を固定','パクリは過程のみ独自']},
+  {ch:3, title:'note先行制作', points:['note先・投稿後','SNSリサーチ（note内NG）','型真似・核維持','解決策1つ','セクション単位執筆']},
+  {ch:4, title:'集客投稿', points:['体験談＋価値観2型','プロンプト5問','抽象化→ネタ化','自己投稿リライト','ポストシート保存']},
+  {ch:5, title:'セールス投稿', points:['5要素＋知らなきゃ','集客とセールス分離','同じプロンプトチャット可','マグレリンクNG']},
+  {ch:6, title:'停滞突破', points:['投稿頻度UP','noteアクセス確認','レター/サムネ/タイトル','無料note','LINE相談']},
+  {ch:7, title:'ロードマップ', points:['X+Threads両方','興味付けローンチ','メイン1本セールス','note内クロスセル','分析ノート習慣']}
+];
+
+const EIGHT = [
+  {n:1,t:'単価設定',d:'初動980円→10〜20部→値上げ。相場価格で初出ししない'},
+  {n:2,t:'無料記事',d:'1000〜2000字・1〜2本。教育加速。有料へ誘導'},
+  {n:3,t:'商品数',d:'2980+1980×2+980で月20〜30万'},
+  {n:4,t:'投稿時間',d:'7-8/12/17-19/21-24。初期1日3投稿'},
+  {n:5,t:'レター離脱',d:'改行・ワードチョイス。ターゲット目線で読む'},
+  {n:6,t:'リンクCTR',d:'X棒グラフ→3〜5%目標。低い→セールス or サムネ'},
+  {n:7,t:'プレゼント',d:'2ヶ月に1回。フォロワー+売上回復'},
+  {n:8,t:'交流密度',d:'DM/LINE/いいね。AI時代の差別化'}
+];
+
+const CHECKS = {
+  launch:['ジャンル1つ決定','参考垢リサーチ5本','プロフ3要素＋誰→誰','note先行公開','プロンプト設定'],
+  stuck:['セールスしてる？','投稿頻度UP','noteアクセス確認','CTR 3-5%?','レター/サムネ/タイトル見直し','無料note','プレゼント企画','LINE相談'],
+  analysis:['❶独自性（ストーリー出てる？）','❷読みやすい？','❸ターゲットの問に答えてる？','❹冒頭1文で伝わる？']
+};
+
+function renderVideos(){
+  document.getElementById('videoCards').innerHTML = VIDEOS.map(v => `
+    <div class="card searchable" data-keywords="第${v.ch}章 ${v.title}">
+      <button class="acc-btn" data-acc>
+        <span class="num">${v.ch}</span>
+        <span class="txt"><strong>第${v.ch}章 ${v.title}</strong><span>${v.points[0]}</span></span>
+        <span class="chev">▼</span>
+      </button>
+      <div class="acc-body"><ul>${v.points.map(p=>`<li>${p}</li>`).join('')}</ul></div>
+    </div>`).join('');
+}
+
+function renderEight(){
+  document.getElementById('eightCards').innerHTML = EIGHT.map(e => `
+    <div class="card searchable" data-keywords="${e.t}">
+      <button class="acc-btn" data-acc>
+        <span class="num">${e.n}</span>
+        <span class="txt"><strong>${e.t}</strong></span>
+        <span class="chev">▼</span>
+      </button>
+      <div class="acc-body"><p>${e.d}</p></div>
+    </div>`).join('');
+}
+
+function renderChecks(){
+  const store = JSON.parse(localStorage.getItem('renaiChecks')||'{}');
+  ['launch','stuck','analysis'].forEach(key=>{
+    const el = document.getElementById('check' + key.charAt(0).toUpperCase() + key.slice(1));
+    el.innerHTML = CHECKS[key].map((label,i)=>{
+      const id = key+'_'+i;
+      const checked = store[id] ? 'checked' : '';
+      return `<label class="check-item"><input type="checkbox" data-id="${id}" ${checked}><span>${label}</span></label>`;
+    }).join('');
+  });
+}
+
+document.querySelectorAll('[data-acc]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+  });
+});
+
+const screens = {home:'screen-home',flow:'screen-flow',videos:'screen-videos',ted:'screen-ted',eight:'screen-eight',analysis:'screen-analysis',prompt:'screen-prompt',numbers:'screen-numbers',check:'screen-check'};
+
+function goTo(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(screens[name]).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.screen === name || (name==='videos'||name==='ted'||name==='eight'||name==='analysis' ? false : b.dataset.screen === name));
+  });
+  if(['videos','ted','eight','analysis'].includes(name)){
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  }
+  window.scrollTo(0,0);
+}
+
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>goTo(btn.dataset.screen));
+});
+
+document.querySelectorAll('[data-go]').forEach(btn=>{
+  btn.addEventListener('click',()=>goTo(btn.dataset.go));
+});
+
+document.querySelectorAll('[data-copy]').forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    const text = document.getElementById(btn.dataset.copy).textContent;
+    await navigator.clipboard.writeText(text);
+    btn.textContent = '✓ コピーした！';
+    btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent='📋 コピーする';btn.classList.remove('ok');},2000);
+  });
+});
+
+document.getElementById('globalSearch').addEventListener('input',e=>{
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll('.searchable').forEach(card=>{
+    const kw = (card.dataset.keywords||'') + card.textContent;
+    card.classList.toggle('hidden', q && !kw.toLowerCase().includes(q));
+  });
+});
+
+document.addEventListener('change',e=>{
+  if(e.target.matches('input[type=checkbox][data-id]')){
+    const store = JSON.parse(localStorage.getItem('renaiChecks')||'{}');
+    store[e.target.dataset.id] = e.target.checked;
+    localStorage.setItem('renaiChecks', JSON.stringify(store));
+  }
+});
+
+document.getElementById('resetChecks').addEventListener('click',()=>{
+  if(confirm('チェックを全部リセットする？')){
+    localStorage.removeItem('renaiChecks');
+    renderChecks();
+  }
+});
+
+renderVideos();
+renderEight();
+renderChecks();
+
+document.querySelectorAll('#videoCards [data-acc], #eightCards [data-acc]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+  });
+});
+</script>
+</body>
+</html>
